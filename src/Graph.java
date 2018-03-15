@@ -1,4 +1,6 @@
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 /*
  * Name: Shrey Sachdeva
  * EID: ss77335
@@ -7,7 +9,7 @@ import java.util.ArrayList;
 public class Graph implements Program2{
 	// n is the number of ports
 	private int n;
-    
+
 	// Edge is the class to represent an edge between two nodes
 	// node is the destination node this edge connected to
 	// time is the travel time of this edge
@@ -34,7 +36,8 @@ public class Graph implements Program2{
 	// to represent the graph
 	// Hint: This include an ArrayList or many ArrayLists?
 	// ....
-	ArrayList<ArrayList<Edge>> graph = new ArrayList<>();
+	//ArrayList<ArrayList<Edge>> graph = new ArrayList<>();
+    private Map<Integer, ArrayList<Edge>> myGraph = new HashMap<>();
 
 
 	// This function is the constructor of the Graph. Do not change the parameters
@@ -49,24 +52,123 @@ public class Graph implements Program2{
 	// Do not change its parameters or return type.
 	// Hint: Here is the place to build the graph with the data structure you defined.
 	public void inputEdge(int port1, int port2, int time, int capacity) {
-		ArrayList<Edge> adjacencyList = graph.get(port1);
-		Edge newEdge = new Edge(port2, time, capacity);
-		adjacencyList.add(newEdge);
-		graph.set(port1, adjacencyList);
-        adjacencyList = graph.get(port2);
+        /*if(firstTime) {
+            for(int i = 0; i < n; i++) {
+                ArrayList<Edge> newList = new ArrayList<>();
+                for(int j = 0; j < n; j++) {
+                    // Capacity = 0?
+                    Edge e = new Edge(j, Integer.MAX_VALUE, 0);
+                    newList.add(e);
+                }
+                graph.add(newList);
+            }
+            firstTime = false;
+        }*/
+	    ArrayList<Edge> adjacencyList;
+	    if(myGraph.containsKey(port1)) {
+	        adjacencyList = myGraph.get(port1);
+        }
+        else {
+	        adjacencyList = new ArrayList<>();
+        }
+	    Edge newEdge = new Edge(port2, time, capacity);
+	    adjacencyList.add(newEdge);
+	    myGraph.put(port1, adjacencyList);
+	    if(myGraph.containsKey(port2)) {
+	        adjacencyList = myGraph.get(port2);
+        }
+        else {
+	        adjacencyList = new ArrayList<>();
+        }
         newEdge = new Edge(port1, time, capacity);
-        adjacencyList.add(newEdge);
-        graph.set(port2, adjacencyList);
+	    adjacencyList.add(newEdge);
+	    myGraph.put(port2, adjacencyList);
+        /*if(graph.get(port1).size() == 0) {
+		    adjacencyList = new ArrayList<>();
+        }
+        else {
+            adjacencyList = graph.get(port1);
+        }*/
+        /*try {
+            adjacencyList = graph.get(port1);
+
+        } catch(Exception e) {
+            adjacencyList = new ArrayList<>();
+        }*/
+        /*adjacencyList = graph.get(port1);
+		Edge newEdge = new Edge(port2, time, capacity);
+		adjacencyList.set(port2, newEdge);
+		graph.set(port1, adjacencyList);
+        /*if(graph.get(port2).size() == 0) {
+            adjacencyList = new ArrayList<>();
+        }
+        else {
+            adjacencyList = graph.get(port2);
+        }*/
+        /*try {
+            adjacencyList = graph.get(port2);
+        } catch(Exception e) {
+            adjacencyList = new ArrayList<>();
+        }*/
+        /*adjacencyList = graph.get(port2);
+        newEdge = new Edge(port1, time, capacity);
+        adjacencyList.set(port1, newEdge);
+        graph.set(port2, adjacencyList);*/
 	}
 
 	// This function is the solution for the Shortest Path problem.
 	// The output of this function is an int which is the shortest travel time from source port to destination port
 	// Do not change its parameters or return type.
 	public int findTimeOptimalPath(int sourcePort, int destPort) {
-		ArrayList<Edge> adjacencyList = graph.get(sourcePort);
-		A
-	    return -1;
+		// Index into overall ArrayList is the port number, Second ArrayList contains distance at index 0 and previous port at index 1
+	    ArrayList<ArrayList<Integer>> distances = new ArrayList<>();
+        ArrayList<Integer> Q = new ArrayList<>();
+        for(int i = 0; i < n; i++) {
+	        ArrayList<Integer> distance = new ArrayList<>();
+	        distance.add(Integer.MAX_VALUE);
+            distance.add(Integer.MAX_VALUE);
+            distances.add(distance);
+            /*distances.get(i).add(Integer.MAX_VALUE);
+	        distances.get(i).add(Integer.MAX_VALUE);*/
+	        Q.add(i);
+        }
+        distances.get(sourcePort).set(0, 0);
+        while(!Q.isEmpty()) {
+            int nearestPort = findMinDistance(Q, distances);
+            if(distances.get(nearestPort).get(0) == Integer.MAX_VALUE) {
+                break;
+            }
+            Q.remove(Q.indexOf(nearestPort));
+            if(nearestPort == destPort) {
+                break;
+            }
+            //ArrayList<Edge> adjacencyList = graph.get(nearestPort);
+            ArrayList<Edge> adjacencyList = myGraph.get(nearestPort);
+            for(Edge e : adjacencyList) {
+                if(Q.contains(e.node)) {
+                    int alt = distances.get(nearestPort).get(0) + e.time;
+                    if(alt < distances.get(e.node).get(0)) {
+                        distances.get(e.node).set(0, alt);
+                        distances.get(e.node).set(1, nearestPort);
+                    }
+                }
+            }
+        }
+	    return distances.get(destPort).get(0);
 	}
+
+	private int findMinDistance(ArrayList<Integer> Q, ArrayList<ArrayList<Integer>> distances) {
+	    int nearestPort = Integer.MAX_VALUE;
+	    int minDistance = Integer.MAX_VALUE;
+	    for(int i = 0; i < Q.size(); i++) {
+	        int currentPort = Q.get(i);
+	        if(distances.get(currentPort).get(0) < minDistance) {
+	            nearestPort = currentPort;
+	            minDistance = distances.get(currentPort).get(0);
+            }
+        }
+        return nearestPort;
+    }
 
 	// This function is the solution for the Widest Path problem.
 	// The output of this function is an int which is the maximum capacity from source port to destination port 
@@ -79,8 +181,9 @@ public class Graph implements Program2{
 	// This function is used to test if you have constructed the graph correct.
 	public ArrayList<Integer> getNeighbors(int node) {
 		ArrayList<Integer> edges = new ArrayList<Integer>();
-		ArrayList<Edge> adjacencyList = graph.get(node);
-		for(Edge e : adjacencyList) {
+		//ArrayList<Edge> adjacencyList = graph.get(node);
+        ArrayList<Edge> adjacencyList = myGraph.get(node);
+        for(Edge e : adjacencyList) {
 		    edges.add(e.node);
         }
 		return edges;
