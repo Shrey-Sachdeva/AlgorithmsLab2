@@ -1,3 +1,4 @@
+import java.sql.Time;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -128,23 +129,26 @@ public class Graph implements Program2{
 	// The output of this function is an int which is the maximum capacity from source port to destination port 
 	// Do not change its parameters or return type.
 	public int findCapOptimalPath(int sourcePort, int destPort) {
-	    ArrayList<ArrayList<Integer>> capacities = new ArrayList<>();
-	    //ArrayList<Integer> Q = new ArrayList<>();
+        //System.out.println(System.currentTimeMillis());
+        ArrayList<ArrayList<Integer>> capacities = new ArrayList<>();
 	    for(int i = 0; i < n; i++) {
 	        ArrayList<Integer> capacity = new ArrayList<>();
 	        capacity.add(0);
 	        capacity.add(Integer.MAX_VALUE);
 	        capacities.add(capacity);
-	        //Q.add(i);
         }
         capacities.get(sourcePort).set(0, Integer.MAX_VALUE);
         ArrayList<Integer> portsKnown = new ArrayList<>();
         portsKnown.add(sourcePort);
 	    while(!portsKnown.contains(destPort)) {
 	        ArrayList<Integer> updateInfo = findBestPath(portsKnown, capacities);
-	        portsKnown.add(updateInfo.get(0));
 	        capacities.get(updateInfo.get(0)).set(0, updateInfo.get(1));
 	        capacities.get(updateInfo.get(0)).set(1, updateInfo.get(2));
+	        int insertionIndex = 0;
+	        while(updateInfo.get(1) < capacities.get(insertionIndex).get(0)) {
+	            insertionIndex++;
+            }
+            portsKnown.add(insertionIndex, updateInfo.get(0));
         }
         int currentPort = destPort;
 	    int minCapacityOfPath = Integer.MAX_VALUE;
@@ -155,32 +159,8 @@ public class Graph implements Program2{
             }
             currentPort = capacities.get(currentPort).get(1);
         }
+        //System.out.println(System.currentTimeMillis());
         return minCapacityOfPath;
-
-		/*// Works for 3 and 5 only
-	    ArrayList<Integer> exploredPorts = new ArrayList<>();
-	    int minCapacity = Integer.MAX_VALUE;
-	    int currentPort = sourcePort;
-	    exploredPorts.add(sourcePort);
-	    while(currentPort != destPort) {
-	        ArrayList<Edge> adjacencyList = myGraph.get(currentPort);
-	        int nextPort = adjacencyList.get(0).node;
-	        int capacity = adjacencyList.get(0).capacity;
-	        for(Edge e : adjacencyList) {
-	            if(!exploredPorts.contains(e.node)) {
-                    if (e.capacity > capacity) {
-                        nextPort = e.node;
-                        capacity = e.capacity;
-                    }
-                }
-            }
-            currentPort = nextPort;
-	        if(capacity < minCapacity) {
-	            minCapacity = capacity;
-            }
-            exploredPorts.add(currentPort);
-        }
-	    return minCapacity;*/
 	}
 
 	private ArrayList<Integer> findBestPath(ArrayList<Integer> portsKnown, ArrayList<ArrayList<Integer>> capacities) {
@@ -206,20 +186,6 @@ public class Graph implements Program2{
             }
         }
         return returnInfo;
-    }
-
-    private int findMaxCapacity(ArrayList<Integer> Q, ArrayList<ArrayList<Integer>> capacities) {
-        int widestPort = Q.get(0);
-        int maxCapacity = capacities.get(widestPort).get(0);
-        for(int i = 0; i < Q.size(); i++) {
-            int currentPort = Q.get(i);
-            int currentCapacity = capacities.get(currentPort).get(0);
-            if((currentCapacity != Integer.MAX_VALUE) && (currentCapacity > maxCapacity)) {
-                widestPort = currentPort;
-                maxCapacity = capacities.get(currentPort).get(0);
-            }
-        }
-        return widestPort;
     }
 
 	// This function returns the neighboring ports of node.
